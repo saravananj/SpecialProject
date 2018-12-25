@@ -1,5 +1,7 @@
 import React from 'react';
 import { Modal, ModalHeader, ModalBody, FormGroup, Label, NavbarBrand } from 'reactstrap';
+import { SketchPicker } from 'react-color';
+import reactCSS from 'reactcss'
 
 const photos = [
   { src: '/images/vict-baby.png' },
@@ -33,7 +35,13 @@ const initialState = {
   topY: "10%",
   topX: "50%",
   bottomX: "50%",
-  bottomY: "90%"
+  bottomY: "90%",
+  fontFamily: "Impact",
+  fontSize: 50,
+  displayFontColorPicker: false,
+  displayStrokeColorPicker: false,
+  fontColor: "#FFF",
+  strokeColor: "#000"
 }
 
 class MainPage extends React.Component {
@@ -65,6 +73,54 @@ class MainPage extends React.Component {
       [event.currentTarget.name]: event.currentTarget.value
     });
   }
+
+  changeFontFamily = (event) => {
+    this.setState({
+      fontFamily: event.currentTarget.value
+    });
+  }
+
+  changeFontSize = (event) => {
+    this.setState({
+      fontSize: event.currentTarget.value
+    });
+  }
+
+  handleFontColorClick = () => {
+    this.setState({
+      displayFontColorPicker: !this.state.displayFontColorPicker
+    });
+  };
+
+  handleFontColorClose = () => {
+    this.setState({
+      displayFontColorPicker: false
+    });
+  };
+
+  handleFontColorChange = (color) => {
+    this.setState({
+      fontColor: color.hex
+    });
+  };
+
+  handleStrokeColorClick = () => {
+    this.setState({
+      displayStrokeColorPicker: !this.state.displayStrokeColorPicker
+    });
+  };
+
+  handleStrokeColorClose = () => {
+    this.setState({
+      displayStrokeColorPicker: false
+    });
+  };
+
+  handleStrokeColorChange = (color) => {
+    this.setState({
+      strokeColor: color.hex
+    });
+  };
 
   getStateObj = (e, type) => {
     let rect = this.imageRef.getBoundingClientRect();
@@ -119,6 +175,24 @@ class MainPage extends React.Component {
     });
   }
 
+  convertSvgToImage = () => {
+
+    alert("Oops! This is still under //TODO");
+    return;
+
+    const svg = this.svgRef;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    var ctx = canvas.getContext( "2d" );
+    var img = document.createElement("img");
+    img.setAttribute( "src", "data:image/svg+xml;base64," + btoa(svgData));
+    img.onload = function() {
+      ctx.drawImage(img, 0, 0);
+      // SVG is converted to image! Its done!
+      console.log(canvas.toDataURL("image/png"));
+    };
+  };
+
   render() {
     const image = photos[this.state.currentImage];
     const base_image = new Image();
@@ -127,13 +201,46 @@ class MainPage extends React.Component {
     var newWidth = 600;
     var newHeight = newWidth / wrh;
     const textStyle = {
-      fontFamily: "Impact",
-      fontSize: "50px",
+      fontFamily: this.state.fontFamily,
+      fontSize: this.state.fontSize+"px",
       textTransform: "uppercase",
-      fill: "#FFF",
-      stroke: "#000",
+      fill: this.state.fontColor,
+      stroke: this.state.strokeColor,
       userSelect: "none"
     }
+
+    const colorPickerStyles = reactCSS({
+      'default': {
+        fontcolor: {
+          height: '14px',
+          borderRadius: '2px',
+          background: `${ this.state.fontColor }`,
+        },
+        strokecolor: {
+          height: '14px',
+          borderRadius: '2px',
+          background: `${ this.state.strokeColor }`,
+        },
+        swatch: {
+          padding: '5px',
+          background: '#fff',
+          borderRadius: '1px',
+          boxShadow: '0 0 0 1px rgba(0,0,0,.1)',
+          cursor: 'pointer',
+        },
+        popover: {
+          position: 'absolute',
+          zIndex: '2',
+        },
+        cover: {
+          position: 'fixed',
+          top: '0px',
+          right: '0px',
+          bottom: '0px',
+          left: '0px',
+        },
+      },
+    });
 
     return (
       <div>
@@ -141,7 +248,7 @@ class MainPage extends React.Component {
           <div className="sidebar">
             <NavbarBrand href="/">Make-a-Meme</NavbarBrand>
             <p>
-              This is a fun 5 hour project inspired by imgur. Built with React.
+              This is a fun 5 + 10 hour project inspired by imgur. Built with React.
             </p>
             <p>
               You can add top and bottom text to a meme-template, move the text around and can save the image by downloading it.
@@ -171,6 +278,7 @@ class MainPage extends React.Component {
           <ModalHeader toggle={this.toggle}>Make-a-Meme</ModalHeader>
           <ModalBody>
             <svg
+              ref={el => { this.svgRef = el }}
               width={newWidth}
               height={newHeight}
               xmlns="http://www.w3.org/2000/svg"
@@ -205,6 +313,50 @@ class MainPage extends React.Component {
               </text>
             </svg>
             <div className="meme-form">
+            <FormGroup>
+              <Label for="fontfamily">Font Family</Label>
+              <select id="fontfamily" name="fontfamily" className="form-control" placeholder="select" onChange={this.changeFontFamily}>
+                <option value="Impact">Impact</option>
+                <option value="Metal Mania">Metal Mania</option>
+                <option value="Architects Daughter">Architects Daughter</option>
+                <option value="Italianno">Italianno</option>
+                <option value="PT Mono">PT Mono</option>
+              </select>
+            </FormGroup>
+            <FormGroup>
+              <Label for="fontsize">Font Size</Label>
+              <select id="fontsize" name="fontsize" className="form-control" placeholder="select" onChange={this.changeFontSize}>
+                <option value="50">50</option>
+                <option value="45">45</option>
+                <option value="40">40</option>
+                <option value="35">35</option>
+                <option value="30">30</option>
+                <option value="25">25</option>
+                <option value="20">20</option>
+                <option value="15">15</option>
+                <option value="10">10</option>
+              </select>
+            </FormGroup>
+            <FormGroup>
+              <Label for="fontColor">Font Color</Label>
+              <div style={ colorPickerStyles.swatch } onClick={ this.handleFontColorClick }>
+                <div style={ colorPickerStyles.fontcolor } />
+              </div>
+              { this.state.displayFontColorPicker ? <div style={ colorPickerStyles.popover }>
+                <div style={ colorPickerStyles.cover } onClick={ this.handleFontColorClose }/>
+                <SketchPicker name="fontColor" color={ this.state.fontColor } onChange={ this.handleFontColorChange } />
+              </div> : null }
+            </FormGroup>
+            <FormGroup>
+              <Label for="strokeColor">Stroke Color</Label>
+              <div style={ colorPickerStyles.swatch } onClick={ this.handleStrokeColorClick }>
+                <div style={ colorPickerStyles.strokecolor } />
+              </div>
+              { this.state.displayStrokeColorPicker ? <div style={ colorPickerStyles.popover }>
+                <div style={ colorPickerStyles.cover } onClick={ this.handleStrokeColorClose }/>
+                <SketchPicker name="strokeColor" color={ this.state.strokeColor } onChange={ this.handleStrokeColorChange } />
+              </div> : null }
+            </FormGroup>
               <FormGroup>
                 <Label for="toptext">Top Text</Label>
                 <input className="form-control" type="text" name="toptext" id="toptext" placeholder="Add text to the top" onChange={this.changeText} />
@@ -213,7 +365,7 @@ class MainPage extends React.Component {
                 <Label for="bottomtext">Bottom Text</Label>
                 <input className="form-control" type="text" name="bottomtext" id="bottomtext" placeholder="Add text to the bottom" onChange={this.changeText} />
               </FormGroup>
-              <button className="btn btn-primary">Download Meme!</button>
+              <button className="btn btn-primary" onClick={this.convertSvgToImage}>Download Meme!</button>
             </div>
           </ModalBody>
         </Modal>
