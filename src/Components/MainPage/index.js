@@ -50,14 +50,20 @@ class MainPage extends React.Component {
     this.state = {
       currentImage: 0,
       modalIsOpen: false,
+      currentImagebase64: null,
       ...initialState
     };
   }
 
   openImage = (index) => {
+    const image = photos[index];
+    const base_image = new Image();
+    base_image.src = image.src;
+    const base64 = this.getBase64Image(base_image);
     this.setState(prevState => ({
       currentImage: index,
       modalIsOpen: !prevState.modalIsOpen,
+      currentImagebase64: base64,
       ...initialState
     }));
   }
@@ -176,22 +182,35 @@ class MainPage extends React.Component {
   }
 
   convertSvgToImage = () => {
-
-    alert("Oops! This is still under //TODO");
-    return;
-
     const svg = this.svgRef;
-    const svgData = new XMLSerializer().serializeToString(svg);
+    let svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement("canvas");
-    var ctx = canvas.getContext( "2d" );
-    var img = document.createElement("img");
-    img.setAttribute( "src", "data:image/svg+xml;base64," + btoa(svgData));
+    canvas.setAttribute("id", "canvas");
+    const svgSize = svg.getBoundingClientRect();
+    canvas.width = svgSize.width;
+    canvas.height = svgSize.height;
+    const img = document.createElement("img");
+    img.setAttribute("src", "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData))));
     img.onload = function() {
-      ctx.drawImage(img, 0, 0);
-      // SVG is converted to image! Its done!
-      console.log(canvas.toDataURL("image/png"));
+      canvas.getContext("2d").drawImage(img, 0, 0);
+      const canvasdata = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.download = "meme.png";
+      a.href = canvasdata;
+      document.body.appendChild(a);
+      a.click();
     };
-  };
+  }
+
+  getBase64Image(img) {
+    var canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    var dataURL = canvas.toDataURL("image/png");
+    return dataURL;
+  }
 
   render() {
     const image = photos[this.state.currentImage];
@@ -280,12 +299,14 @@ class MainPage extends React.Component {
             <svg
               ref={el => { this.svgRef = el }}
               width={newWidth}
+              id="svg_ref"
               height={newHeight}
+              ref={el => { this.svgRef = el }}
               xmlns="http://www.w3.org/2000/svg"
-              xmlnshlink="http://www.w3.org/1999/xlink">
+              xmlnsXlink="http://www.w3.org/1999/xlink">
               <image
                 ref={el => { this.imageRef = el }}
-                xlinkHref={photos[this.state.currentImage].src}
+                xlinkHref={this.state.currentImagebase64}
                 height={newHeight}
                 width={newWidth}
               />
@@ -365,7 +386,7 @@ class MainPage extends React.Component {
                 <Label for="bottomtext">Bottom Text</Label>
                 <input className="form-control" type="text" name="bottomtext" id="bottomtext" placeholder="Add text to the bottom" onChange={this.changeText} />
               </FormGroup>
-              <button className="btn btn-primary" onClick={this.convertSvgToImage}>Download Meme!</button>
+              <button onClick={() => this.convertSvgToImage()} className="btn btn-primary">Download Meme!</button>
             </div>
           </ModalBody>
         </Modal>
